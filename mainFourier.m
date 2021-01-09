@@ -1,4 +1,4 @@
-function mainFourier(curve_x, curve_y, no_circles)
+function mainFourier(curve_x, curve_y)
     % obliczenei dyskretnej transformaty fourieria
     Z = complex(curve_x(:), curve_y(:));
     % Discrete Fourier Transform
@@ -7,8 +7,6 @@ function mainFourier(curve_x, curve_y, no_circles)
     radius = abs(Y);    % promień
     phase = angle(Y);   % faza
 
-    % sortujemy po promieniu, ale czemu?????????????????
-    % i dalej to juz nie ogarniam :(
     [radius, idx] = sort(radius, 'descend');
     Y = Y(idx);
     freq = freq(idx);
@@ -16,72 +14,69 @@ function mainFourier(curve_x, curve_y, no_circles)
 
     time_step = 2*pi/length(Y);
 
-    % Draw the result
+    % Rysowanie
     time = 0;
-    wave = [];
-    generation = 1;
+
+                    % + 2, aby zakończyć w początkowym punkcie
+    wave = NaN(length(Y)+2, 2);
+    iter = 1;
     h = figure;
     handle = axes('Parent',h);
     
-    while generation < length(Y)+2
-        [x, y] = draw_epicycles(freq, radius, phase, time, wave, handle);
+    while iter < length(Y)+2
+        [x, y] = calculateAndDrawCircles(freq, radius, phase, time, wave, handle);
 
-        % Add the next computed point to the wave curve
-        wave = [wave; [x,y]];
-
-        % Increment time and generation
+        % Dodajemy dolejny piksel do tablicy z krzywą
+        wave(iter,:) = [x,y];
+        
         time = time + time_step;
-        generation = generation + 1;
+        iter = iter + 1;
     end
 end
 
-function [x, y] = draw_epicycles(freq, radius, phase, time, wave, handle)
-    % Compute coordinates
-    x = 0;      
+% zwracamy x i y, będzie się tam znajdować kolejny punkt z naszej krzywej
+function [x, y] = calculateAndDrawCircles(freq, radius, phase, time, wave, handle)
+    % następne współżędne koła 
+    x = 0;  
     y = 0;
+    
     N = length(freq);
-    centers = NaN(N,2);
-    radii_lines = NaN(N,4);
+    
+    centers = NaN(N,2); %tablica przechowująca środki kół
+    radii_lines = NaN(N,4); %tablica przechowująca promienie
     for i = 1:1:N
-        % Store the previous coordinates, which will be the center of the
-        % new circle
+        % zachowujemy środki aktualnych kół
         prevx = x;
         prevy = y;
         
-        % Get the new coordinates of the joint point
+        % liczymy środek najtępnego koła
         x = x + radius(i) * cos(freq(i)*time + phase(i));
         y = y + radius(i) * sin(freq(i)*time + phase(i));
         
-        % Circle centers
         centers(i,:) = [prevx, prevy];
         
-        % Radii lines
         radii_lines(i,:) = [prevx, x, prevy, y];
     end    
     
-    % Plotting
-    cla;        % IMPORTANT: Clearing axes
-                % Note that viscircles do not clear the axes and thus, they
-                % should be cleared in order to avoid lagging issues due to
-                % the amount of objects that are stacked
-    % Circles
+    
+    cla; 
+    % Rysujemy koła
     viscircles(handle, centers, radius, 'Color', 0.5 * [1, 1, 1], 'LineWidth', 0.1);
     hold on;
     
-    % Lines that join the center with the tangent points
+    % Rysujemy promienie
     plot(handle, radii_lines(:,1:2), radii_lines(:,3:4), 'Color', 0.5*[1 1 1], 'LineWidth', 0.1);
     hold on;
     
-    % Result line
+    % Rysujemy krzywą
     if ~isempty(wave), plot(handle, wave(:,1), wave(:,2), 'k', 'LineWidth', 2); hold on; end
     
-    % Pointer
+    % Zwróćmy uwagę, że w tym miejscu środek kolejnego kola (zmienne x i y)
+    % jest punktem, w którym znajduję się kolejny piksel naszej krzywej
+    
+    % Rysujemy kropkę na nowo dorysowanym punkcie
     plot(handle, x, y, 'or', 'MarkerFaceColor', 'r');
     hold off;
-    
-    % Plot limits
-    %xmax = sum(radius);
-    %axis([-xmax xmax -xmax xmax]);
    
     axis equal;
     axis off;
