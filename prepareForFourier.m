@@ -8,7 +8,6 @@ function prepareForFourier(filename, filepath)
     bim = imfill(bim, 'holes');
     bim = imopen(bim,ones(3));
     bim = imclose(bim,ones(3));
-    %imshow(bim);
 
     eimage = edge(bim);
 
@@ -38,12 +37,12 @@ function prepareForFourier(filename, filepath)
 
     [Y,X] = pol2cart(-X,-Y);
         
-    % zapisujemy dane możliwe do narysowania jako .mat
+    % Zapisujemy dane możliwe do narysowania jako .mat
     [filename, pathname] = uiputfile('*.mat','Zapisz zmienne do rysowania');
     data = fullfile(pathname, filename);
     save(data, 'X', 'Y');
 
-    % wyświetlamy i zapisujemy obrazek jako .bmp
+    % Wyświetlamy i zapisujemy obrazek jako .bmp
     figure;
     imshow(eimage);
     imsave;

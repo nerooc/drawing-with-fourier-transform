@@ -1,75 +1,93 @@
-function mainFourier(curve_x, curve_y)
-    % obliczenei dyskretnej transformaty fourieria
-    Z = complex(curve_x(:), curve_y(:));
-    % Discrete Fourier Transform
+function mainFourier(data_x, data_y)
+
+    % Wybieramy kolor krzywej, którą będziemy rysować
+    color = uisetcolor([0, 1, 0], 'Wybierz kolor obrazu');
+
+    % Obliczamy dyskretną transformatę Fouriera
+    Z = complex(data_x(:), data_y(:));
     Y = fft(Z, length(Z));
-    freq = 0:1:length(Z)-1;     % częstotliwość
-    radius = abs(Y);    % promień
-    phase = angle(Y);   % faza
+
+    % Częstotliwość
+    frequency = 0:1:length(Z) - 1;     
+
+    % Promień
+    radius = abs(Y);   
+    
+    % Faza
+    phase = angle(Y);   
 
     [radius, idx] = sort(radius, 'descend');
+
     Y = Y(idx);
-    freq = freq(idx);
+    frequency = frequency(idx);
     phase = phase(idx);
 
-    time_step = 2*pi/length(Y);
+    time_step = 2 * pi / length(Y);
 
     % Rysowanie
     time = 0;
 
-                    % + 2, aby zakończyć w początkowym punkcie
-    wave = NaN(length(Y)+2, 2);
-    iter = 1;
+    % + 2, aby zakończyć w początkowym punkcie
+    wave = NaN(length(Y) + 2, 2);
+
+    iteration = 1;
     h = figure;
-    handle = axes('Parent',h);
+    handle = axes('Parent', h);
     
-    while iter < length(Y)+2
-        [x, y] = calculateAndDrawCircles(freq, radius, phase, time, wave, handle);
+    while iteration < length(Y)+2
+        [x, y] = calculateAndDrawCircles(frequency, radius, phase, time, wave, handle, color);
 
         % Dodajemy dolejny piksel do tablicy z krzywą
-        wave(iter,:) = [x,y];
+        wave(iteration,:) = [x,y];
         
         time = time + time_step;
-        iter = iter + 1;
+        iteration = iteration + 1;
     end
 end
 
-% zwracamy x i y, będzie się tam znajdować kolejny punkt z naszej krzywej
-function [x, y] = calculateAndDrawCircles(freq, radius, phase, time, wave, handle)
-    % następne współżędne koła 
+% Zwracamy x i y, będzie się tam znajdować kolejny punkt z naszej krzywej
+function [x, y] = calculateAndDrawCircles(frequency, radius, phase, time, wave, handle, color)
+
+    % Następne współrzędne koła 
     x = 0;  
     y = 0;
     
-    N = length(freq);
+    N = length(frequency);
     
-    centers = NaN(N,2); %tablica przechowująca środki kół
-    radii_lines = NaN(N,4); %tablica przechowująca promienie
+    % Tablica przechowująca środki kół
+    centers_array = NaN(N, 2); 
+
+    % Tablica przechowująca promienie
+    radii_array = NaN(N, 4); 
+
     for i = 1:1:N
-        % zachowujemy środki aktualnych kół
-        prevx = x;
-        prevy = y;
+
+        % Zachowujemy środki aktualnych (poprzednich) kół
+        previous_center_x = x;
+        previous_center_y = y;
         
-        % liczymy środek najtępnego koła
-        x = x + radius(i) * cos(freq(i)*time + phase(i));
-        y = y + radius(i) * sin(freq(i)*time + phase(i));
+        % Liczymy środek następnego koła
+        x = x + radius(i) * cos(frequency(i) * time + phase(i));
+        y = y + radius(i) * sin(frequency(i) * time + phase(i));
         
-        centers(i,:) = [prevx, prevy];
-        
-        radii_lines(i,:) = [prevx, x, prevy, y];
+        % Wypełniamy tablice
+        centers_array(i,:) = [previous_center_x, previous_center_y];
+        radii_array(i,:) = [previous_center_x, x, previous_center_y, y];
     end    
     
-    
+    % Czyścimy obiekty
     cla; 
+    
     % Rysujemy koła
-    viscircles(handle, centers, radius, 'Color', 0.5 * [1, 1, 1], 'LineWidth', 0.1);
+    viscircles(handle, centers_array, radius, 'Color', [0, 0, 0], 'LineWidth', 0.1);
     hold on;
     
     % Rysujemy promienie
-    plot(handle, radii_lines(:,1:2), radii_lines(:,3:4), 'Color', 0.5*[1 1 1], 'LineWidth', 0.1);
+    plot(handle, radii_array(:,1:2), radii_array(:,3:4), 'Color', [0, 0, 0], 'LineWidth', 0.1);
     hold on;
     
     % Rysujemy krzywą
-    if ~isempty(wave), plot(handle, wave(:,1), wave(:,2), 'k', 'LineWidth', 2); hold on; end
+    if ~isempty(wave), plot(handle, wave(:,1), wave(:,2), 'k','Color', color, 'LineWidth', 2); hold on; end
     
     % Zwróćmy uwagę, że w tym miejscu środek kolejnego kola (zmienne x i y)
     % jest punktem, w którym znajduję się kolejny piksel naszej krzywej
