@@ -16,6 +16,7 @@ function mainFourier(data_x, data_y)
     % Faza
     phase = angle(Y);   
 
+    % Sortujemy po promieniu
     [radius, idx] = sort(radius, 'descend');
 
     Y = Y(idx);
@@ -38,7 +39,7 @@ function mainFourier(data_x, data_y)
         [x, y] = calculateAndDrawCircles(frequency, radius, phase, time, wave, handle, color);
 
         % Dodajemy dolejny piksel do tablicy z krzywą
-        wave(iteration,:) = [x,y];
+        wave(iteration, :) = [x,y];
         
         time = time + time_step;
         iteration = iteration + 1;
@@ -46,13 +47,15 @@ function mainFourier(data_x, data_y)
 end
 
 % Zwracamy x i y, będzie się tam znajdować kolejny punkt z naszej krzywej
-function [x, y] = calculateAndDrawCircles(frequency, radius, phase, time, wave, handle, color)
+function [next_center_x, next_center_y] = calculateAndDrawCircles(frequency, radius, phase, time, wave, handle, color)
 
     % Następne współrzędne koła 
-    x = 0;  
-    y = 0;
+    next_center_x = 0;  
+    next_center_y = 0;
     
-    N = length(frequency);
+    % W tym miejscu moglibyśmy policzyc również długość
+    % zmiennych frequency i phase, ponieważ jest ona taka sama
+    N = length(radius);
     
     % Tablica przechowująca środki kół
     centers_array = NaN(N, 2); 
@@ -63,16 +66,16 @@ function [x, y] = calculateAndDrawCircles(frequency, radius, phase, time, wave, 
     for i = 1:1:N
 
         % Zachowujemy środki aktualnych (poprzednich) kół
-        previous_center_x = x;
-        previous_center_y = y;
+        center_x = next_center_x;
+        center_y = next_center_y;
         
         % Liczymy środek następnego koła
-        x = x + radius(i) * cos(frequency(i) * time + phase(i));
-        y = y + radius(i) * sin(frequency(i) * time + phase(i));
+        next_center_x = next_center_x + radius(i) * cos(frequency(i) * time + phase(i));
+        next_center_y = next_center_y + radius(i) * sin(frequency(i) * time + phase(i));
         
         % Wypełniamy tablice
-        centers_array(i,:) = [previous_center_x, previous_center_y];
-        radii_array(i,:) = [previous_center_x, x, previous_center_y, y];
+        centers_array(i,:) = [center_x, center_y];
+        radii_array(i,:) = [center_x, next_center_x, center_y, next_center_y];
     end    
     
     % Czyścimy obiekty
@@ -93,7 +96,7 @@ function [x, y] = calculateAndDrawCircles(frequency, radius, phase, time, wave, 
     % jest punktem, w którym znajduję się kolejny piksel naszej krzywej
     
     % Rysujemy kropkę na nowo dorysowanym punkcie
-    plot(handle, x, y, 'or', 'MarkerFaceColor', 'r');
+    plot(handle, next_center_x, next_center_y, 'or', 'MarkerFaceColor', 'r');
     hold off;
    
     axis equal;

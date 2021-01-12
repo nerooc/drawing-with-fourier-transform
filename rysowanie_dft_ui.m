@@ -95,7 +95,7 @@ function pushbutton4_Callback(hObject, eventdata, handles)
 [filename, filepath] = uigetfile({'*.mat','MATLAB Files'},...
   'Wybierz plik ze zbinaryzowanym obrazem');
 if ~isempty(filename)
-    data = load([filepath, filename]);
+    data = load([filepath, filename]);         
     if ~isfield(data, 'X')
         errordlg('Plik nie zawiera wektora X!');
     elseif ~isfield(data, 'Y')
